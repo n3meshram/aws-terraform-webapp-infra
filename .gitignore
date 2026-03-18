@@ -1,0 +1,28 @@
+# Terraform directories
+.terraform/
+
+# Terraform state files
+*.tfstate
+*.tfstate.*
+
+# Terraform plan files
+*.tfplan
+
+# Sensitive variable files ONLY
+*.auto.tfvars.json
+secrets.tfvars
+
+# Crash logs
+crash.log
+
+# CLI config
+.terraformrc
+terraform.rc
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
