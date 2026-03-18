@@ -26,3 +26,6 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
+
+# Git internal temp files
+FETCH_HEAD
