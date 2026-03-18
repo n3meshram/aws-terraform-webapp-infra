@@ -8,9 +8,9 @@
 # Terraform plan files
 *.tfplan
 
-# Sensitive variable files
-*.tfvars
-*.tfvars.json
+# Sensitive variable files ONLY
+*.auto.tfvars.json
+secrets.tfvars
 
 # Crash logs
 crash.log
@@ -26,5 +26,3 @@ Thumbs.db
 # IDE files
 .vscode/
 .idea/
-
-.git
