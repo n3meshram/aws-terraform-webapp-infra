@@ -6,6 +6,16 @@ resource "aws_autoscaling_group" "this" {
 
   vpc_zone_identifier = var.private_subnets
 
+  instance_refresh {
+  strategy = "Rolling"
+
+  preferences {
+    min_healthy_percentage = 50
+  }
+
+  
+}
+
   launch_template {
     id = var.launch_template_id
     version = "$Latest"

@@ -2,6 +2,10 @@ resource "aws_launch_template" "web" {
   name_prefix   = "web-${var.environment}-"
   image_id      = var.ami_id
   instance_type = var.instance_type
+  
+  iam_instance_profile {
+  name = var.instance_profile_name
+}
 
   vpc_security_group_ids = [
     var.security_group_id

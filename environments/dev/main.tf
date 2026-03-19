@@ -26,6 +26,7 @@ module "launch_template" {
   ami_id            = var.ami_id
   instance_type     = var.instance_type
   security_group_id = module.security_group.ec2_sg_id
+  instance_profile_name = module.iam.instance_profile_name
 }
 
 module "autoscaling" {
@@ -37,6 +38,7 @@ module "autoscaling" {
   private_subnets    = module.vpc.private_subnets
   target_group_arn   = module.alb.target_group_arn
   launch_template_id = module.launch_template.launch_template_id
+  
 }
 
 
@@ -48,4 +50,8 @@ module "alb" {
   vpc_id         = module.vpc.vpc_id
   public_subnets = module.vpc.public_subnets
   alb_sg_id      = module.security_group.alb_sg_id
+}
+
+module "iam" {
+  source = "../../modules/iam"
 }
