@@ -1,31 +1,11 @@
-# Terraform directories
-.terraform/
-
-# Terraform state files
+# Terraform
+**/.terraform/*
 *.tfstate
 *.tfstate.*
+.terraform.lock.hcl
 
-# Terraform plan files
-*.tfplan
-
-# Sensitive variable files ONLY
-*.auto.tfvars.json
-secrets.tfvars
-
-# Crash logs
+# Logs
 crash.log
 
-# CLI config
-.terraformrc
-terraform.rc
-
-# OS files
-.DS_Store
-Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-
-# Git internal temp files
+# Local
 FETCH_HEAD
