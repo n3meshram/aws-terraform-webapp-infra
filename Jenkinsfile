@@ -13,7 +13,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 dir('environments/dev') {
-                    sh 'terraform init'
+                    sh 'terraform init -reconfigure'
                 }
             }
         }
@@ -21,7 +21,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 dir('environments/dev') {
-                    sh 'terraform plan'
+                    sh 'terraform plan -var-file=terraform.tfvars'
                 }
             }
         }
