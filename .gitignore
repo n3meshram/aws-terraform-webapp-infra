@@ -9,4 +9,3 @@ crash.log
 
 # Local
 FETCH_HEAD
-*.tfvars
