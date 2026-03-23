@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'ENV', choices: ['dev', 'stage'], description: 'Select environment')
+    }
+
     environment {
         AWS_DEFAULT_REGION = 'ap-south-1'
     }
@@ -10,7 +14,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir('environments/dev') {
+                    dir("environments/${params.ENV}") {
                         sh 'terraform init'
                     }
                 }
@@ -19,7 +23,7 @@ pipeline {
 
         stage('Terraform Validate') {
             steps {
-                dir('environments/dev') {
+                dir("environments/${params.ENV}") {
                     sh 'terraform validate'
                 }
             }
@@ -28,7 +32,7 @@ pipeline {
         stage('Terraform Plan') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir('environments/dev') {
+                    dir("environments/${params.ENV}") {
                         sh 'terraform plan -out=tfplan'
                     }
                 }
@@ -37,14 +41,14 @@ pipeline {
 
         stage('Approval') {
             steps {
-                input message: 'Apply Terraform changes?'
+                input message: "Apply changes to ${params.ENV}?"
             }
         }
 
         stage('Terraform Apply') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir('environments/dev') {
+                    dir("environments/${params.ENV}") {
                         sh 'terraform apply -auto-approve tfplan'
                     }
                 }
