@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     parameters {
-        choice(name: 'ENV', choices: ['dev', 'stage'], description: 'Select environment')
-    }
+    choice(name: 'ENV', choices: ['dev', 'stage'], description: 'Select environment')
+    choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select action')
+}
 
     environment {
         AWS_DEFAULT_REGION = 'ap-south-1'
@@ -46,12 +47,27 @@ pipeline {
         }
 
         stage('Terraform Apply') {
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${params.ENV}") {
-                        sh 'terraform apply -auto-approve tfplan'
-                    }
-                }
+    when {
+        expression { params.ACTION == 'apply' }
+    }
+    steps {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+            dir("environments/${params.ENV}") {
+                sh 'terraform apply -auto-approve tfplan'
+            }
+        }
+    }
+}
+
+stage('Terraform Destroy') {
+    when {
+        expression { params.ACTION == 'destroy' }
+    }
+    steps {
+        input message: "Are you sure you want to DESTROY ${params.ENV}?"
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+            dir("environments/${params.ENV}") {
+                sh 'terraform destroy -auto-approve'
             }
         }
     }
