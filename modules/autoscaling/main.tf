@@ -1,5 +1,5 @@
 resource "aws_autoscaling_group" "this" {
-  name = "webapp-asg"
+  name = "webapp-asg-${var.environment}"
   desired_capacity    = 2
   max_size            = 3
   min_size            = 1
