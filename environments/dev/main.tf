@@ -16,13 +16,13 @@ module "vpc" {
 module "security_group" {
   source      = "../../modules/security_group"
   vpc_id      = module.vpc.vpc_id
-  environment = "dev"
+  environment = var.environment
 }
 
 module "launch_template" {
   source = "../../modules/launch-template"
 
-  environment       = "dev"
+  environment       = var.environment
   ami_id            = var.ami_id
   instance_type     = var.instance_type
   security_group_id = module.security_group.ec2_sg_id
@@ -54,4 +54,5 @@ module "alb" {
 
 module "iam" {
   source = "../../modules/iam"
+  environment = var.environment
 }
