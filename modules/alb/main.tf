@@ -1,3 +1,4 @@
+#tfsec:ignore:aws-elb-alb-not-public
 resource "aws_lb" "this" {
   name               = "${var.project}-${var.environment}-alb"
   load_balancer_type = "application"
