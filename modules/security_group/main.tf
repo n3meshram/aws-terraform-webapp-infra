@@ -13,14 +13,15 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # allow all outbound (keep simple for now)
-  egress {
-    description     = "Allow HTTP traffic from ALB to EC2 instances"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  resource "aws_security_group_rule" "alb_to_ec2_egress" {
+  type                     = "egress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+
+  security_group_id        = aws_security_group.alb_sg.id
+  source_security_group_id = aws_security_group.ec2_sg.id
+}
 }
 
 resource "aws_security_group" "ec2_sg" {
