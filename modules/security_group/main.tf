@@ -1,5 +1,6 @@
 resource "aws_security_group" "alb_sg" {
   name   = "webapp-${var.environment}-alb-sg"
+  description = "Security group for ALB allowing HTTP traffic from internet"
   vpc_id = var.vpc_id
   
 #tfsec:ignore:aws-ec2-no-public-ingress-sgr
@@ -24,6 +25,7 @@ resource "aws_security_group" "alb_sg" {
 
 resource "aws_security_group" "ec2_sg" {
   name   = "webapp-${var.environment}-ec2-sg"
+  description = "Security group for EC2 allowing traffic from ALB"
   vpc_id = var.vpc_id
 
 
