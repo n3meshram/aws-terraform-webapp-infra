@@ -154,6 +154,35 @@ resource "aws_kms_key" "flow_logs_key" {
   description             = "KMS key for VPC flow logs"
   deletion_window_in_days = 7
   enable_key_rotation     = true
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "Allow account use"
+        Effect = "Allow"
+        Principal = {
+          AWS = "*"
+        }
+        Action = "kms:*"
+        Resource = "*"
+      },
+      {
+        Sid = "Allow CloudWatch Logs"
+        Effect = "Allow"
+        Principal = {
+          Service = "logs.ap-south-1.amazonaws.com"
+        }
+        Action = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey",
+          "kms:DescribeKey"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }
 
 resource "aws_kms_alias" "flow_logs_alias" {
