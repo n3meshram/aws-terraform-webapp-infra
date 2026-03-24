@@ -4,7 +4,7 @@ resource "aws_lb" "this" {
   security_groups    = [var.alb_sg_id]
   subnets            = var.public_subnets
 
-  drop_invalid_header_fields = true   # ✅ ADD THIS
+  drop_invalid_header_fields = true 
 }
 
 resource "aws_lb_target_group" "this" {
