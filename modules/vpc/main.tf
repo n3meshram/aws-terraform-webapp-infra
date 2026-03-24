@@ -153,6 +153,7 @@ resource "aws_flow_log" "vpc_flow_log" {
 resource "aws_kms_key" "flow_logs_key" {
   description             = "KMS key for VPC flow logs"
   deletion_window_in_days = 7
+  enable_key_rotation     = true
 }
 
 resource "aws_kms_alias" "flow_logs_alias" {
