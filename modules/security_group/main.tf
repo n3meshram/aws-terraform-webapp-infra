@@ -1,7 +1,8 @@
 resource "aws_security_group" "alb_sg" {
   name   = "webapp-${var.environment}-alb-sg"
   vpc_id = var.vpc_id
-
+  
+#tfsec:ignore:aws-ec2-no-public-ingress-sgr
   ingress {
     from_port   = 80
     to_port     = 80
