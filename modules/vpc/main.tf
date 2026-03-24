@@ -136,6 +136,7 @@ resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
     Resource = "*"
   }]
 })
+}
 
 
 resource "aws_flow_log" "vpc_flow_log" {
@@ -155,5 +156,4 @@ resource "aws_kms_key" "flow_logs_key" {
 resource "aws_kms_alias" "flow_logs_alias" {
   name          = "alias/vpc-flow-logs-${var.environment}"
   target_key_id = aws_kms_key.flow_logs_key.id
-}
 }
