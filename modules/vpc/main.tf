@@ -137,6 +137,7 @@ resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
   }]
 })
 
+
 resource "aws_flow_log" "vpc_flow_log" {
   log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
   log_destination_type = "cloud-watch-logs"
@@ -154,4 +155,5 @@ resource "aws_kms_key" "flow_logs_key" {
 resource "aws_kms_alias" "flow_logs_alias" {
   name          = "alias/vpc-flow-logs-${var.environment}"
   target_key_id = aws_kms_key.flow_logs_key.id
+}
 }
