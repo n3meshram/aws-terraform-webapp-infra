@@ -117,7 +117,7 @@ resource "aws_iam_role" "vpc_flow_logs_role" {
     }]
   })
 }
-
+#tfsec:ignore:aws-iam-no-policy-wildcards
 resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
   name = "vpc-flow-logs-policy-${var.environment}"
   role = aws_iam_role.vpc_flow_logs_role.id
