@@ -99,6 +99,8 @@ resource "aws_route_table_association" "private_assoc" {
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   name = "/aws/vpc/flow-logs-${var.environment}"
+  kms_key_id        = aws_kms_key.flow_logs_key.arn   # ✅ ADD THIS
+  retention_in_days = 7
 }
 
 resource "aws_iam_role" "vpc_flow_logs_role" {
@@ -121,17 +123,19 @@ resource "aws_iam_role_policy" "vpc_flow_logs_policy" {
   role = aws_iam_role.vpc_flow_logs_role.id
 
   policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = [
-        "logs:CreateLogStream",
-        "logs:PutLogEvents"
-      ]
-      Effect   = "Allow"
-      Resource = "*"
-    }]
-  })
-}
+  Version = "2012-10-17"
+  Statement = [{
+    Action = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+    Effect   = "Allow"
+    Resource = "*"
+  }]
+})
 
 resource "aws_flow_log" "vpc_flow_log" {
   log_destination      = aws_cloudwatch_log_group.vpc_flow_logs.arn
@@ -140,4 +144,14 @@ resource "aws_flow_log" "vpc_flow_log" {
   vpc_id = aws_vpc.this.id   
 
   iam_role_arn = aws_iam_role.vpc_flow_logs_role.arn
+}
+
+resource "aws_kms_key" "flow_logs_key" {
+  description             = "KMS key for VPC flow logs"
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "flow_logs_alias" {
+  name          = "alias/vpc-flow-logs-${var.environment}"
+  target_key_id = aws_kms_key.flow_logs_key.id
 }
