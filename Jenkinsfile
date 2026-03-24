@@ -52,7 +52,9 @@ pipeline {
     }
     steps {
         dir("environments/${params.ENV}") {
-            sh 'tfsec .'
+            sh '''
+            tfsec . --soft-fail=false
+            '''
         }
     }
 }
