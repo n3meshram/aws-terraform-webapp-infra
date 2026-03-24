@@ -46,6 +46,17 @@ pipeline {
             }
         }
 
+        stage('Terraform Security Scan') {
+    when {
+        expression { params.ACTION == 'apply' }
+    }
+    steps {
+        dir("environments/${params.ENV}") {
+            sh 'tfsec .'
+        }
+    }
+}
+
         stage('Approval') {
             when {
                 expression { params.ACTION == 'apply' }
