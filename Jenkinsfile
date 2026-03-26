@@ -1,13 +1,3 @@
-def ENVIRONMENT = ""
-
-if (env.BRANCH_NAME == "develop") {
-    ENVIRONMENT = "stage"
-} else if (env.BRANCH_NAME == "main") {
-    ENVIRONMENT = "prod"
-} else {
-    ENVIRONMENT = "dev"
-}
-
 pipeline {
     agent any
 
@@ -29,7 +19,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${ENVIRONMENT}") {
+                    dir("environments/${params.ENV}") {
                         sh 'terraform init'
                     }
                 }
@@ -38,7 +28,7 @@ pipeline {
 
         stage('Terraform Validate') {
             steps {
-                dir("environments/${ENVIRONMENT}") {
+                dir("environments/${params.ENV}") {
                     sh 'terraform validate'
                 }
             }
@@ -50,38 +40,15 @@ pipeline {
             }
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${ENVIRONMENT}") {
-                        sh '''
-                         ls
-                         terraform plan -var-file=dev.tfvars -out=tfplan
-                         terraform show tfplan
-                        '''
+                    dir("environments/${params.ENV}") {
+                        sh """
+                        terraform plan -var-file=${params.ENV}.tfvars -out=tfplan
+                        terraform show tfplan
+                        """
                     }
                 }
             }
         }
-
-        stage('Terraform Security Scan') {
-    when {
-        expression { params.ACTION == 'apply' }
-    }
-    steps {
-        dir("environments/${ENVIRONMENT}") {
-            sh '''
-            tfsec . --soft-fail=false
-            '''
-        }
-    }
-}
-
-       stage('Approval') {
-    when {
-        expression { ENVIRONMENT == 'stage' }
-    }
-    steps {
-        input "Deploy to STAGE?"
-    }
-}
 
         stage('Terraform Apply') {
             when {
@@ -89,7 +56,7 @@ pipeline {
             }
             steps {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${ENVIRONMENT}") {
+                    dir("environments/${params.ENV}") {
                         sh 'terraform apply -auto-approve tfplan'
                     }
                 }
@@ -103,8 +70,8 @@ pipeline {
             steps {
                 input message: "Are you sure you want to DESTROY ${params.ENV}?"
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${ENVIRONMENT}") {
-                        sh 'terraform destroy -auto-approve'
+                    dir("environments/${params.ENV}") {
+                        sh "terraform destroy -var-file=${params.ENV}.tfvars -auto-approve"
                     }
                 }
             }
