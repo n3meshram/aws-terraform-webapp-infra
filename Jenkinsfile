@@ -48,7 +48,8 @@ pipeline {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
                     dir("environments/${ENVIRONMENT}") {
                         sh '''
-                        terraform plan -var-file=dev.tfvars -out=tfplan
+                         ls
+                         terraform plan -var-file=dev.tfvars -out=tfplan
                          terraform show tfplan
                         '''
                     }
