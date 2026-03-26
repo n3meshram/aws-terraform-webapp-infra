@@ -11,6 +11,10 @@ if (env.BRANCH_NAME == "develop") {
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+    }
+
     parameters {
         choice(name: 'ENV', choices: ['dev', 'stage'], description: 'Select environment')
         choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select action')
