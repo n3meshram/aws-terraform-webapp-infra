@@ -8,17 +8,6 @@ if (env.BRANCH_NAME == "develop") {
     ENVIRONMENT = "dev"
 }
 
-
-
-
-
-
-
-
-
-
-
-
 pipeline {
     agent any
 
@@ -59,7 +48,7 @@ pipeline {
                 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
                     dir("environments/${ENVIRONMENT}") {
                         sh '''
-                        terraform plan -out=tfplan
+                        sh 'terraform plan -var-file=dev.tfvars -out=tfplan'
                         terraform show tfplan
                         '''
                     }
