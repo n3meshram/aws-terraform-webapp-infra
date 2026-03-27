@@ -33,7 +33,7 @@ stages {
     stage('Terraform Plan') {
         steps {
             dir('environments/dev') {
-                sh 'terraform plan'
+                sh 'terraform plan -var-file=dev.tfvars'
             }
         }
     }
