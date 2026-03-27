@@ -1,80 +1,51 @@
 pipeline {
-    agent any
+agent any
 
-    options {
-        disableConcurrentBuilds()
+
+environment {
+    AWS_DEFAULT_REGION = 'ap-south-1'
+}
+
+stages {
+
+    stage('Checkout') {
+        steps {
+            checkout scm
+        }
     }
 
-    parameters {
-        choice(name: 'ENV', choices: ['dev', 'stage'], description: 'Select environment')
-        choice(name: 'ACTION', choices: ['apply', 'destroy'], description: 'Select action')
-    }
-
-    environment {
-        AWS_DEFAULT_REGION = 'ap-south-1'
-    }
-
-    stages {
-
-        stage('Terraform Init') {
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${params.ENV}") {
+    stage('Terraform Init') {
+        steps {
+            script {
+                if (env.BRANCH_NAME == 'develop') {
+                    dir('environments/dev') {
+                        sh 'terraform init'
+                    }
+                } else if (env.BRANCH_NAME == 'main') {
+                    dir('environments/prod') {
                         sh 'terraform init'
                     }
                 }
             }
         }
+    }
 
-        stage('Terraform Validate') {
-            steps {
-                dir("environments/${params.ENV}") {
-                    sh 'terraform validate'
-                }
-            }
-        }
-
-        stage('Terraform Plan') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${params.ENV}") {
-                        sh """
-                        terraform plan -var-file=${params.ENV}.tfvars -out=tfplan
-                        terraform show tfplan
-                        """
+    stage('Terraform Apply') {
+        steps {
+            script {
+                if (env.BRANCH_NAME == 'develop') {
+                    dir('environments/dev') {
+                        sh 'terraform apply -auto-approve -var-file=dev.tfvars'
                     }
-                }
-            }
-        }
-
-        stage('Terraform Apply') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
-            steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${params.ENV}") {
-                        sh 'terraform apply -auto-approve tfplan'
-                    }
-                }
-            }
-        }
-
-        stage('Terraform Destroy') {
-            when {
-                expression { params.ACTION == 'destroy' && params.ENV != 'prod' }
-            }
-            steps {
-                input message: "Are you sure you want to DESTROY ${params.ENV}?"
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
-                    dir("environments/${params.ENV}") {
-                        sh "terraform destroy -var-file=${params.ENV}.tfvars -auto-approve"
+                } else if (env.BRANCH_NAME == 'main') {
+                    dir('environments/prod') {
+                        sh 'terraform apply -auto-approve -var-file=prod.tfvars'
                     }
                 }
             }
         }
     }
+}
+
+
 }
