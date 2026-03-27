@@ -16,24 +16,32 @@ stages {
 
     stage('Terraform Init') {
         steps {
-            dir('environments/dev') {
-                sh 'terraform init'
+            script {
+                if (env.BRANCH_NAME == 'develop') {
+                    dir('environments/dev') {
+                        sh 'terraform init'
+                    }
+                } else if (env.BRANCH_NAME == 'main') {
+                    dir('environments/prod') {
+                        sh 'terraform init'
+                    }
+                }
             }
         }
     }
 
-    stage('Terraform Validate') {
+    stage('Terraform Apply') {
         steps {
-            dir('environments/dev') {
-                sh 'terraform validate'
-            }
-        }
-    }
-
-    stage('Terraform Plan') {
-        steps {
-            dir('environments/dev') {
-                sh 'terraform plan -var-file=dev.tfvars'
+            script {
+                if (env.BRANCH_NAME == 'develop') {
+                    dir('environments/dev') {
+                        sh 'terraform apply -auto-approve -var-file=dev.tfvars'
+                    }
+                } else if (env.BRANCH_NAME == 'main') {
+                    dir('environments/prod') {
+                        sh 'terraform apply -auto-approve -var-file=prod.tfvars'
+                    }
+                }
             }
         }
     }
