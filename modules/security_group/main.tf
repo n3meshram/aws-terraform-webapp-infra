@@ -36,7 +36,16 @@ resource "aws_security_group" "ec2_sg" {
     Name = "webapp-${var.environment}-alb-sg"
   }
 }
+resource "aws_security_group_rule" "ec2_outbound" {
+  description       = "Allow outbound internet access"
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
 
+  security_group_id = aws_security_group.ec2_sg.id
+}
 resource "aws_security_group_rule" "alb_to_ec2" {
   description              = "Allow HTTP traffic from ALB"
   type                     = "ingress"
