@@ -36,6 +36,7 @@ resource "aws_security_group" "ec2_sg" {
     Name = "webapp-${var.environment}-alb-sg"
   }
 }
+#tfsec:ignore:aws-ec2-no-public-egress-sgr
 resource "aws_security_group_rule" "ec2_outbound" {
   description       = "Allow outbound internet access"
   type              = "egress"
