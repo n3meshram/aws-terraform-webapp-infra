@@ -12,8 +12,6 @@ resource "aws_autoscaling_group" "this" {
   preferences {
     min_healthy_percentage = 50
   }
-
-  
 }
 
   launch_template {
@@ -26,4 +24,3 @@ resource "aws_autoscaling_group" "this" {
   health_check_type = "ELB"
 }
 
-  
