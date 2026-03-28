@@ -2,10 +2,7 @@ provider "aws" {
   region = "ap-south-1"
 }
 
-data "aws_ssm_parameter" "app_password" {
-  name            = "/dev/app/password"
-  with_decryption = true
-}
+
 
 
 module "vpc" {
@@ -25,12 +22,18 @@ module "security_group" {
   environment = var.environment
 }
 
+data "aws_ssm_parameter" "app_password" {
+  name            = "/dev/app/password"
+  with_decryption = true
+}
+
 module "launch_template" {
   source = "../../modules/launch-template"
 
   environment       = var.environment
   ami_id            = var.ami_id
   instance_type     = var.instance_type
+  app_password = data.aws_ssm_parameter.app_password.value
   security_group_id = module.security_group.ec2_sg_id
   instance_profile_name = module.iam.instance_profile_name
 }

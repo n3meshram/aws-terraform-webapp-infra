@@ -18,8 +18,6 @@ variable "project" {
   type        = string
 }
 
-variable "app_password" {
-  description = "App password from SSM"
-  type        = string
-}
+
+
 
