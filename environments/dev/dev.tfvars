@@ -15,7 +15,7 @@ azs = [
   "ap-south-1b"
 ]
 
-ami_id        = "ami-04efded783750b090"
+ami_id        = "ami-01c191738a3f6876b"
 instance_type = "t2.micro"
 
 project = "webapp"
