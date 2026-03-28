@@ -11,3 +11,9 @@ variable "environment" {
   description = "Environment name"
   type        = string
 }
+environment = [
+  {
+    name  = "APP_PASSWORD"
+    value = data.aws_ssm_parameter.app_password.value
+  }
+]

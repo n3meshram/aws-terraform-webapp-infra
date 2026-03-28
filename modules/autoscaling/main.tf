@@ -6,14 +6,18 @@ resource "aws_autoscaling_group" "this" {
 
   vpc_zone_identifier = var.private_subnets
 
+  user_data = <<-EOF
+#!/bin/bash
+echo "APP_PASSWORD=${data.aws_ssm_parameter.app_password.value}" >> /etc/environment
+EOF
+  
+
   instance_refresh {
   strategy = "Rolling"
 
   preferences {
     min_healthy_percentage = 50
   }
-
-  
 }
 
   launch_template {
@@ -26,4 +30,3 @@ resource "aws_autoscaling_group" "this" {
   health_check_type = "ELB"
 }
 
-  

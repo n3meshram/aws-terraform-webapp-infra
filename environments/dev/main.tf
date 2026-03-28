@@ -2,6 +2,12 @@ provider "aws" {
   region = "ap-south-1"
 }
 
+data "aws_ssm_parameter" "app_password" {
+  name            = "/dev/app/password"
+  with_decryption = true
+}
+
+
 module "vpc" {
   source = "../../modules/vpc"
 
