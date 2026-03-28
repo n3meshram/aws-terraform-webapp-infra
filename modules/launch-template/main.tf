@@ -13,10 +13,10 @@ EOF
   name = var.instance_profile_name
 }
 
- # 🔥 ADD THIS BLOCK
+ 
   metadata_options {
-    http_tokens = "required"
-  }
+  http_tokens = "optional"
+}
 
   
 
