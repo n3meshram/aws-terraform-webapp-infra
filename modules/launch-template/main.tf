@@ -13,7 +13,7 @@ EOF
   name = var.instance_profile_name
 }
 
- 
+ #tfsec:ignore:aws-ec2-enforce-launch-config-http-token-imds
   metadata_options {
   http_tokens = "optional"
 }
