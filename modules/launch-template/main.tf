@@ -5,16 +5,26 @@ resource "aws_launch_template" "web" {
 
   user_data = base64encode(<<-EOF
 #!/bin/bash
-yum install -y httpd
+
+yum install -y httpd aws-cli
 systemctl enable httpd
 systemctl start httpd
 
-echo "APP_PASSWORD=${var.app_password}" >> /etc/environment
+# Fetch password from SSM at runtime
+PASSWORD=$(aws ssm get-parameter \
+  --name "/dev/app/password" \
+  --with-decryption \
+  --region ap-south-1 \
+  --query "Parameter.Value" \
+  --output text)
+
+echo "APP_PASSWORD=$PASSWORD" >> /etc/environment
 
 cat <<HTML > /var/www/html/index.html
-<h1>Dev Environment new</h1>
-<p>Password injected via SSM</p>
+<h1>Dev Environment</h1>
+<p>Secure SSM Fetch Enabled</p>
 HTML
+
 EOF
 )
   
