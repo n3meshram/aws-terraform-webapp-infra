@@ -5,7 +5,16 @@ resource "aws_launch_template" "web" {
 
   user_data = base64encode(<<-EOF
 #!/bin/bash
+yum install -y httpd
+systemctl enable httpd
+systemctl start httpd
+
 echo "APP_PASSWORD=${var.app_password}" >> /etc/environment
+
+cat <<HTML > /var/www/html/index.html
+<h1>Dev Environment</h1>
+<p>Password injected via SSM</p>
+HTML
 EOF
 )
   
