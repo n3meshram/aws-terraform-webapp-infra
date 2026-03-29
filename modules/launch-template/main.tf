@@ -3,34 +3,36 @@ resource "aws_launch_template" "web" {
   image_id      = var.ami_id
   instance_type = var.instance_type
 
-  user_data = base64encode(<<-EOF
+ user_data = base64encode(<<-EOF
 #!/bin/bash
+
+ENV="${var.environment}"
 
 yum install -y httpd aws-cli
 systemctl enable httpd
 systemctl start httpd
 
-# Fetch password from SSM at runtime
-ENV="${var.environment}"
 PASSWORD=$(aws ssm get-parameter \
-  --name "/${ENV}/app/password" \
+  --name "/$ENV/app/password" \
   --with-decryption \
   --region ap-south-1 \
   --query "Parameter.Value" \
   --output text)
 
-echo "APP_PASSWORD=$PASSWORD" >> /etc/environment
 if [ -z "$PASSWORD" ]; then
   echo "Failed to fetch password from SSM" > /var/www/html/index.html
   exit 1
 fi
 
+echo "APP_PASSWORD=$PASSWORD" >> /etc/environment
+
 cat <<HTML > /var/www/html/index.html
-<h1>${ENV} Environment NEW</h1>
+<h1>$ENV Environment NEW</h1>
 <p>Secure SSM Fetch Enabled</p>
 HTML
 
 EOF
+
 )
   
   iam_instance_profile {
