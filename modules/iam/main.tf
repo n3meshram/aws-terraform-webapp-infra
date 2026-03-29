@@ -30,8 +30,10 @@ resource "aws_iam_role_policy" "ssm_parameter_access" {
     Statement = [
       {
         Effect = "Allow"
-        Action = "ssm:GetParameter"
-        "Resource": "arn:aws:ssm:ap-south-1:<account-id>:parameter/${var.environment}/app/password"
+        Action = [
+          "ssm:GetParameter"
+        ]
+        Resource = "arn:aws:ssm:ap-south-1:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/app/password"
       }
     ]
   })
