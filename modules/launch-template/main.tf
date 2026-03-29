@@ -12,7 +12,7 @@ systemctl start httpd
 echo "APP_PASSWORD=${var.app_password}" >> /etc/environment
 
 cat <<HTML > /var/www/html/index.html
-<h1>Dev Environment</h1>
+<h1>Dev Environment new</h1>
 <p>Password injected via SSM</p>
 HTML
 EOF
