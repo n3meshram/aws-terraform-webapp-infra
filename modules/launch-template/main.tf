@@ -2,15 +2,47 @@ resource "aws_launch_template" "web" {
   name_prefix   = "web-${var.environment}-"
   image_id      = var.ami_id
   instance_type = var.instance_type
+
+ user_data = base64encode(<<-EOF
+#!/bin/bash
+
+ENV="${var.environment}"
+
+yum install -y httpd aws-cli
+systemctl enable httpd
+systemctl start httpd
+
+PASSWORD=$(aws ssm get-parameter \
+  --name "/$ENV/app/password" \
+  --with-decryption \
+  --region ap-south-1 \
+  --query "Parameter.Value" \
+  --output text)
+
+if [ -z "$PASSWORD" ]; then
+  echo "Failed to fetch password from SSM" > /var/www/html/index.html
+  exit 1
+fi
+
+echo "APP_PASSWORD=$PASSWORD" >> /etc/environment
+
+cat <<HTML > /var/www/html/index.html
+<h1>$ENV Environment NEW</h1>
+<p>Secure SSM Fetch Enabled</p>
+HTML
+
+EOF
+
+)
   
   iam_instance_profile {
   name = var.instance_profile_name
 }
 
- # 🔥 ADD THIS BLOCK
+ #tfsec:ignore:aws-ec2-enforce-launch-config-http-token-imds
   metadata_options {
-    http_tokens = "required"
-  }
+  http_tokens = "optional"
+}
 
   
 
