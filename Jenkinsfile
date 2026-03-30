@@ -4,9 +4,6 @@ agent any
 
 environment {
     AWS_DEFAULT_REGION = 'ap-south-1'
-    TF_ENV  = ''
-    TF_DIR  = ''
-    TF_VARS = ''
 }
 
 stages {
@@ -16,32 +13,40 @@ stages {
             script {
 
                 def branch = env.BRANCH_NAME?.trim()
+                def tfEnv = ""
 
                 echo "BRANCH_NAME = ${branch}"
                 echo "CHANGE_ID   = ${env.CHANGE_ID}"
 
                 if (env.CHANGE_ID) {
-                    env.TF_ENV = "dev"
+                    tfEnv = "dev"
 
                 } else if (branch.contains("develop")) {
-                    env.TF_ENV = "dev"
+                    tfEnv = "dev"
 
                 } else if (branch.contains("stage")) {
-                    env.TF_ENV = "stage"
+                    tfEnv = "stage"
 
                 } else if (branch.contains("main")) {
-                    env.TF_ENV = "prod"
+                    tfEnv = "prod"
 
                 } else {
                     error "❌ Unsupported branch: ${branch}"
                 }
 
-                env.TF_DIR  = "environments/${env.TF_ENV}"
-                env.TF_VARS = "${env.TF_ENV}.tfvars"
+                // Assign ONCE (stable)
+                env.TF_ENV  = tfEnv
+                env.TF_DIR  = "environments/${tfEnv}"
+                env.TF_VARS = "${tfEnv}.tfvars"
 
                 echo "✅ TF_ENV  = ${env.TF_ENV}"
                 echo "✅ TF_DIR  = ${env.TF_DIR}"
                 echo "✅ TF_VARS = ${env.TF_VARS}"
+
+                // Safety check
+                if (!env.TF_ENV) {
+                    error "❌ TF_ENV is not set"
+                }
             }
         }
     }
@@ -78,7 +83,7 @@ stages {
 
     stage('Terraform Plan (PR only)') {
         when {
-            expression { return env.CHANGE_ID != null }
+            expression { env.CHANGE_ID != null }
         }
         steps {
             dir("environments/dev") {
