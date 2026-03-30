@@ -9,44 +9,42 @@ environment {
     TF_VARS = ''
 }
 
-stage('Setup Environment') {
-steps {
-script {
+stages {
 
+    stage('Setup Environment') {
+        steps {
+            script {
 
-        def branch = env.BRANCH_NAME?.trim()
+                def branch = env.BRANCH_NAME?.trim()
 
-        echo "BRANCH_NAME = ${branch}"
-        echo "CHANGE_ID   = ${env.CHANGE_ID}"
+                echo "BRANCH_NAME = ${branch}"
+                echo "CHANGE_ID   = ${env.CHANGE_ID}"
 
-        if (env.CHANGE_ID) {
-            env.TF_ENV = "dev"
+                if (env.CHANGE_ID) {
+                    env.TF_ENV = "dev"
 
-        } else if (branch.contains("develop")) {
-            env.TF_ENV = "dev"
+                } else if (branch.contains("develop")) {
+                    env.TF_ENV = "dev"
 
-        } else if (branch.contains("stage")) {
-            env.TF_ENV = "stage"
+                } else if (branch.contains("stage")) {
+                    env.TF_ENV = "stage"
 
-        } else if (branch.contains("main")) {
-            env.TF_ENV = "prod"
+                } else if (branch.contains("main")) {
+                    env.TF_ENV = "prod"
 
-        } else {
-            error "❌ Unsupported branch: ${branch}"
+                } else {
+                    error "❌ Unsupported branch: ${branch}"
+                }
+
+                env.TF_DIR  = "environments/${env.TF_ENV}"
+                env.TF_VARS = "${env.TF_ENV}.tfvars"
+
+                echo "✅ TF_ENV  = ${env.TF_ENV}"
+                echo "✅ TF_DIR  = ${env.TF_DIR}"
+                echo "✅ TF_VARS = ${env.TF_VARS}"
+            }
         }
-
-        env.TF_DIR  = "environments/${env.TF_ENV}"
-        env.TF_VARS = "${env.TF_ENV}.tfvars"
-
-        echo "✅ TF_ENV  = ${env.TF_ENV}"
-        echo "✅ TF_DIR  = ${env.TF_DIR}"
-        echo "✅ TF_VARS = ${env.TF_VARS}"
     }
-}
-
-
-}
-
 
     stage('Checkout') {
         steps {
@@ -133,4 +131,4 @@ script {
 }
 
 
-
+}
