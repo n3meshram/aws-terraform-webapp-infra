@@ -2,6 +2,9 @@ provider "aws" {
   region = "ap-south-1"
 }
 
+
+
+
 module "vpc" {
   source = "../../modules/vpc"
 
@@ -19,12 +22,15 @@ module "security_group" {
   environment = var.environment
 }
 
+
+
 module "launch_template" {
   source = "../../modules/launch-template"
 
   environment       = var.environment
   ami_id            = var.ami_id
   instance_type     = var.instance_type
+  
   security_group_id = module.security_group.ec2_sg_id
   instance_profile_name = module.iam.instance_profile_name
 }
