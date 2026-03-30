@@ -18,16 +18,23 @@ stages {
                 echo "BRANCH_NAME = ${branch}"
                 echo "CHANGE_ID   = ${env.CHANGE_ID}"
 
+                // PR → always plan against dev
                 if (env.CHANGE_ID) {
-                    // PR → always treat as dev plan
                     tfEnv = "dev"
 
+                // Feature branch (no deploy)
+                } else if (branch.contains("feature")) {
+                    tfEnv = "dev"
+
+                // Dev environment
                 } else if (branch.contains("develop")) {
                     tfEnv = "dev"
 
+                // Stage environment
                 } else if (branch.contains("stage")) {
                     tfEnv = "stage"
 
+                // Prod environment
                 } else if (branch.contains("main")) {
                     tfEnv = "prod"
 
@@ -76,7 +83,7 @@ stages {
         }
     }
 
-    // ✅ PR → PLAN ONLY (NO APPLY)
+    // ✅ PR → ONLY PLAN
     stage('Terraform Plan') {
         when {
             expression { env.CHANGE_ID != null }
@@ -88,7 +95,9 @@ stages {
         }
     }
 
-    // ✅ APPLY ONLY AFTER MERGE (NOT PR)
+    // ❌ NO APPLY on feature branch (important safety)
+    
+    // ✅ Apply Dev (only after merge)
     stage('Terraform Apply - Dev') {
         when {
             expression {
@@ -102,6 +111,7 @@ stages {
         }
     }
 
+    // ✅ Apply Stage (only after merge)
     stage('Terraform Apply - Stage') {
         when {
             expression {
@@ -115,6 +125,7 @@ stages {
         }
     }
 
+    // ✅ Approval for Prod
     stage('Approval for Production') {
         when {
             expression {
@@ -126,6 +137,7 @@ stages {
         }
     }
 
+    // ✅ Apply Prod (after approval)
     stage('Terraform Apply - Prod') {
         when {
             expression {
