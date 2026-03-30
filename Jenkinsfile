@@ -1,12 +1,35 @@
 pipeline {
 agent any
 
-
+```
 environment {
     AWS_DEFAULT_REGION = 'ap-south-1'
+    TF_ENV = ''
+    TF_DIR = ''
+    TF_VARS = ''
 }
 
 stages {
+
+    stage('Setup Environment') {
+        steps {
+            script {
+                if (env.CHANGE_ID || env.BRANCH_NAME == 'develop') {
+                    env.TF_ENV = "dev"
+                } else if (env.BRANCH_NAME == 'stage') {
+                    env.TF_ENV = "stage"
+                } else if (env.BRANCH_NAME == 'main') {
+                    env.TF_ENV = "prod"
+                }
+
+                env.TF_DIR = "environments/${env.TF_ENV}"
+                env.TF_VARS = "${env.TF_ENV}.tfvars"
+
+                echo "Environment: ${env.TF_ENV}"
+                echo "Directory: ${env.TF_DIR}"
+            }
+        }
+    }
 
     stage('Checkout') {
         steps {
@@ -16,52 +39,24 @@ stages {
 
     stage('Terraform Init') {
         steps {
-            script {
-                if (env.CHANGE_ID) {
-                    dir('environments/dev') {
-                        sh 'terraform init'
-                    }
-                } else if (env.BRANCH_NAME == 'develop') {
-                    dir('environments/dev') {
-                        sh 'terraform init'
-                    }
-                } else if (env.BRANCH_NAME == 'main') {
-                    dir('environments/prod') {
-                        sh 'terraform init'
-                    }
-                }
+            dir("${env.TF_DIR}") {
+                sh 'terraform init'
             }
         }
     }
 
     stage('Terraform Validate') {
         steps {
-            script {
-                if (env.CHANGE_ID || env.BRANCH_NAME == 'develop') {
-                    dir('environments/dev') {
-                        sh 'terraform validate'
-                    }
-                } else if (env.BRANCH_NAME == 'main') {
-                    dir('environments/prod') {
-                        sh 'terraform validate'
-                    }
-                }
+            dir("${env.TF_DIR}") {
+                sh 'terraform validate'
             }
         }
     }
 
     stage('Security Scan (tfsec)') {
         steps {
-            script {
-                if (env.CHANGE_ID || env.BRANCH_NAME == 'develop') {
-                    dir('environments/dev') {
-                        sh 'tfsec .'
-                    }
-                } else if (env.BRANCH_NAME == 'main') {
-                    dir('environments/prod') {
-                        sh 'tfsec .'
-                    }
-                }
+            dir("${env.TF_DIR}") {
+                sh 'tfsec .'
             }
         }
     }
@@ -71,7 +66,7 @@ stages {
             expression { return env.CHANGE_ID != null }
         }
         steps {
-            dir('environments/dev') {
+            dir("environments/dev") {
                 sh 'terraform plan -var-file=dev.tfvars'
             }
         }
@@ -82,8 +77,19 @@ stages {
             branch 'develop'
         }
         steps {
-            dir('environments/dev') {
-                sh 'terraform apply -auto-approve -var-file=dev.tfvars'
+            dir("${env.TF_DIR}") {
+                sh "terraform apply -auto-approve -var-file=${env.TF_VARS}"
+            }
+        }
+    }
+
+    stage('Terraform Apply - Stage') {
+        when {
+            branch 'stage'
+        }
+        steps {
+            dir("${env.TF_DIR}") {
+                sh "terraform apply -auto-approve -var-file=${env.TF_VARS}"
             }
         }
     }
@@ -102,12 +108,12 @@ stages {
             branch 'main'
         }
         steps {
-            dir('environments/prod') {
-                sh 'terraform apply -auto-approve -var-file=prod.tfvars'
+            dir("${env.TF_DIR}") {
+                sh "terraform apply -auto-approve -var-file=${env.TF_VARS}"
             }
         }
     }
 }
-
+```
 
 }
