@@ -4,7 +4,7 @@ resource "aws_vpc" "this" {
   enable_dns_support   = true
 
   tags = {
-    Name        = "webapp-${var.environment}-vpc"
+    Name        = "webapp-${var.environment}-vpc@"
     Environment = var.environment
   }
 }
