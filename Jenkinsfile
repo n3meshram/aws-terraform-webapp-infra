@@ -1,7 +1,7 @@
 pipeline {
 agent any
 
-```
+
 environment {
     AWS_DEFAULT_REGION = 'ap-south-1'
     TF_ENV  = ''
@@ -127,6 +127,6 @@ stages {
         }
     }
 }
-```
+
 
 }
