@@ -1,11 +1,11 @@
 pipeline {
 agent any
 
-
+```
 environment {
     AWS_DEFAULT_REGION = 'ap-south-1'
-    TF_ENV = ''
-    TF_DIR = ''
+    TF_ENV  = ''
+    TF_DIR  = ''
     TF_VARS = ''
 }
 
@@ -14,19 +14,32 @@ stages {
     stage('Setup Environment') {
         steps {
             script {
-                if (env.CHANGE_ID || env.BRANCH_NAME == 'develop') {
+
+                echo "BRANCH_NAME = ${env.BRANCH_NAME}"
+                echo "CHANGE_ID   = ${env.CHANGE_ID}"
+
+                if (env.CHANGE_ID) {
                     env.TF_ENV = "dev"
-                } else if (env.BRANCH_NAME == 'stage') {
+
+                } else if (env.BRANCH_NAME?.contains("develop")) {
+                    env.TF_ENV = "dev"
+
+                } else if (env.BRANCH_NAME?.contains("stage")) {
                     env.TF_ENV = "stage"
-                } else if (env.BRANCH_NAME == 'main') {
+
+                } else if (env.BRANCH_NAME?.contains("main")) {
                     env.TF_ENV = "prod"
+
+                } else {
+                    error "❌ Unsupported branch: ${env.BRANCH_NAME}"
                 }
 
-                env.TF_DIR = "environments/${env.TF_ENV}"
+                env.TF_DIR  = "environments/${env.TF_ENV}"
                 env.TF_VARS = "${env.TF_ENV}.tfvars"
 
-                echo "Environment: ${env.TF_ENV}"
-                echo "Directory: ${env.TF_DIR}"
+                echo "✅ TF_ENV  = ${env.TF_ENV}"
+                echo "✅ TF_DIR  = ${env.TF_DIR}"
+                echo "✅ TF_VARS = ${env.TF_VARS}"
             }
         }
     }
@@ -74,7 +87,7 @@ stages {
 
     stage('Terraform Apply - Dev') {
         when {
-            branch 'develop'
+            expression { env.BRANCH_NAME?.contains("develop") }
         }
         steps {
             dir("${env.TF_DIR}") {
@@ -85,7 +98,7 @@ stages {
 
     stage('Terraform Apply - Stage') {
         when {
-            branch 'stage'
+            expression { env.BRANCH_NAME?.contains("stage") }
         }
         steps {
             dir("${env.TF_DIR}") {
@@ -96,7 +109,7 @@ stages {
 
     stage('Approval for Production') {
         when {
-            branch 'main'
+            expression { env.BRANCH_NAME?.contains("main") }
         }
         steps {
             input message: "Approve deployment to PRODUCTION?"
@@ -105,7 +118,7 @@ stages {
 
     stage('Terraform Apply - Prod') {
         when {
-            branch 'main'
+            expression { env.BRANCH_NAME?.contains("main") }
         }
         steps {
             dir("${env.TF_DIR}") {
@@ -114,6 +127,6 @@ stages {
         }
     }
 }
-
+```
 
 }
