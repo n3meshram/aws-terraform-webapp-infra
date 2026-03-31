@@ -12,27 +12,18 @@ yum install -y httpd aws-cli
 systemctl enable httpd
 systemctl start httpd
 
-PASSWORD=$(aws ssm get-parameter \
-  --name "/$ENV/app/password" \
+#!/bin/bash
+
+APP_PASSWORD=$(aws ssm get-parameter \
+  --name "/${ENV}/app/password" \
   --with-decryption \
-  --region ap-south-1 \
   --query "Parameter.Value" \
   --output text)
 
-if [ -z "$PASSWORD" ]; then
-  echo "Failed to fetch password from SSM" > /var/www/html/index.html
-  exit 1
-fi
-
-echo "APP_PASSWORD=$PASSWORD" >> /etc/environment
-
 cat <<HTML > /var/www/html/index.html
-<h1>$ENV Environment NEW</h1>
-<p>Secure SSM Fetch Enabled</p>
+<h1>${ENV} Environment</h1>
+<p>Password from SSM: $APP_PASSWORD</p>
 HTML
-
-EOF
-
 )
   
   iam_instance_profile {
