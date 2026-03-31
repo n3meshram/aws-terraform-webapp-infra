@@ -14,14 +14,14 @@ systemctl start httpd
 
 
 APP_PASSWORD=$(aws ssm get-parameter \
-  --name "/${ENV}/app/password" \
+  --name "/${var.environment}/app/password" \
   --with-decryption \
   --query "Parameter.Value" \
   --output text)
 
 cat <<HTML > /var/www/html/index.html
-<h1>${ENV} Environment</h1>
-<p>Password from SSM: $APP_PASSWORD</p>
+<h1>${var.environment} Environment</h1>
+<p>Password: $APP_PASSWORD</p>
 HTML
 
 EOF
