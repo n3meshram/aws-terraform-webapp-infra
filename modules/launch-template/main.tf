@@ -57,7 +57,7 @@ APP_PASSWORD=$(aws ssm get-parameter \
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
 
-if [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
+if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
     echo "<h1>Access Granted</h1>"
 else
     echo "<h1>Access Denied</h1>"
