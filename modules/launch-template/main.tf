@@ -5,35 +5,72 @@ resource "aws_launch_template" "web" {
 
  user_data = base64encode(<<-EOF
 #!/bin/bash
-
-ENV="${var.environment}"
+yum update -y
 
 yum install -y httpd aws-cli
-systemctl enable httpd
-systemctl start httpd
 
-PASSWORD=$(aws ssm get-parameter \
-  --name "/$ENV/app/password" \
+systemctl start httpd
+systemctl enable httpd
+
+# Enable CGI
+
+sed -i 's/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks ExecCGI/' /etc/httpd/conf/httpd.conf
+sed -i 's/#AddHandler cgi-script .cgi/AddHandler cgi-script .cgi .sh/' /etc/httpd/conf/httpd.conf
+
+mkdir -p /var/www/cgi-bin
+
+# Create login page
+
+cat <<HTML > /var/www/html/index.html
+
+<html>
+<head><title>Login</title></head>
+<body>
+<h1>${var.environment} Environment Login</h1>
+<form action="/cgi-bin/auth.sh" method="get">
+  <input type="password" name="password" placeholder="Enter Password"/>
+  <input type="submit" value="Login"/>
+</form>
+</body>
+</html>
+HTML
+
+# Create backend script
+
+cat <<SCRIPT > /var/www/cgi-bin/auth.sh
+#!/bin/bash
+
+echo "Content-type: text/html"
+echo ""
+
+# Extract password from query string
+INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed -n 's/^password=//p')
+
+# Fetch password from SSM
+APP_PASSWORD=$(aws ssm get-parameter \
+  --name "/${var.environment}/app/password" \
   --with-decryption \
-  --region ap-south-1 \
   --query "Parameter.Value" \
   --output text)
 
-if [ -z "$PASSWORD" ]; then
-  echo "Failed to fetch password from SSM" > /var/www/html/index.html
-  exit 1
+# Trim spaces/newlines (IMPORTANT)
+INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
+APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
+
+if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
+    echo "<h1>Access Granted</h1>"
+else
+    echo "<h1>Access Denied</h1>"
 fi
+SCRIPT
 
-echo "APP_PASSWORD=$PASSWORD" >> /etc/environment
+chmod +x /var/www/cgi-bin/auth.sh
+chown -R apache:apache /var/www
 
-cat <<HTML > /var/www/html/index.html
-<h1>$ENV Environment NEW</h1>
-<p>Secure SSM Fetch Enabled</p>
-HTML
-
+systemctl restart httpd
 EOF
-
-)
+ )
+ 
   
   iam_instance_profile {
   name = var.instance_profile_name
