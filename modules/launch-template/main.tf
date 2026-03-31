@@ -3,36 +3,25 @@ resource "aws_launch_template" "web" {
   image_id      = var.ami_id
   instance_type = var.instance_type
 
- user_data = base64encode(<<-EOF
+ user_data = <<-EOF
 #!/bin/bash
-
 yum update -y
 
-# Install Apache
-
-yum install -y httpd
-
-# Start and enable Apache
+yum install -y httpd aws-cli
 
 systemctl start httpd
 systemctl enable httpd
-
-# Install AWS CLI (if not already present)
-
-yum install -y aws-cli
 
 # Enable CGI
 
 sed -i 's/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks ExecCGI/' /etc/httpd/conf/httpd.conf
 sed -i 's/#AddHandler cgi-script .cgi/AddHandler cgi-script .cgi .sh/' /etc/httpd/conf/httpd.conf
 
-# Create CGI directory
-
 mkdir -p /var/www/cgi-bin
 
 # Create login page
 
-cat <<EOF > /var/www/html/index.html
+cat <<HTML > /var/www/html/index.html
 
 <html>
 <head><title>Login</title></head>
@@ -44,11 +33,11 @@ cat <<EOF > /var/www/html/index.html
 </form>
 </body>
 </html>
-EOF
+HTML
 
-# Create backend auth script
+# Create backend script
 
-cat <<EOF > /var/www/cgi-bin/auth.sh
+cat <<SCRIPT > /var/www/cgi-bin/auth.sh
 #!/bin/bash
 
 echo "Content-type: text/html"
@@ -65,19 +54,15 @@ echo "<h1>Access Granted</h1>"
 else
 echo "<h1>Access Denied</h1>"
 fi
-EOF
-
-# Set permissions
+SCRIPT
 
 chmod +x /var/www/cgi-bin/auth.sh
 chown -R apache:apache /var/www
 
-# Restart Apache
-
 systemctl restart httpd
-
 EOF
- )
+
+ 
   
   iam_instance_profile {
   name = var.instance_profile_name
