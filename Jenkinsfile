@@ -94,7 +94,18 @@ stages {
             }
         }
     }
-
+stage('Drift Detection') {
+    when {
+        expression { env.CHANGE_ID == null }
+    }
+    steps {
+        dir("${env.TF_DIR}") {
+            sh '''
+            terraform plan -detailed-exitcode -var-file=${TF_VARS} || true
+            '''
+        }
+    }
+}
     // ❌ NO APPLY on feature branch (important safety)
     
     // ✅ Apply Dev (only after merge)
