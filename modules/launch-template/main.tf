@@ -43,16 +43,24 @@ cat <<SCRIPT > /var/www/cgi-bin/auth.sh
 echo "Content-type: text/html"
 echo ""
 
-APP_PASSWORD=$(aws ssm get-parameter 
---name "/${var.environment}/app/password" 
---with-decryption 
---query "Parameter.Value" 
---output text)
+# Extract password from query string
+INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed -n 's/^password=//p')
 
-if [ "$QUERY_STRING" = "password=$APP_PASSWORD" ]; then
-echo "<h1>Access Granted</h1>"
+# Fetch password from SSM
+APP_PASSWORD=$(aws ssm get-parameter \
+  --name "/${var.environment}/app/password" \
+  --with-decryption \
+  --query "Parameter.Value" \
+  --output text)
+
+# Trim spaces/newlines (IMPORTANT)
+INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
+APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
+
+if [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
+    echo "<h1>Access Granted</h1>"
 else
-echo "<h1>Access Denied</h1>"
+    echo "<h1>Access Denied</h1>"
 fi
 SCRIPT
 
