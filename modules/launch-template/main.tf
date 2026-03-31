@@ -6,23 +6,75 @@ resource "aws_launch_template" "web" {
  user_data = base64encode(<<-EOF
 #!/bin/bash
 
-ENV="${var.environment}"
+yum update -y
 
-yum install -y httpd aws-cli
-systemctl enable httpd
+# Install Apache
+
+yum install -y httpd
+
+# Start and enable Apache
+
 systemctl start httpd
+systemctl enable httpd
 
+# Install AWS CLI (if not already present)
 
-APP_PASSWORD=$(aws ssm get-parameter \
-  --name "/${var.environment}/app/password" \
-  --with-decryption \
-  --query "Parameter.Value" \
-  --output text)
+yum install -y aws-cli
 
-cat <<HTML > /var/www/html/index.html
-<h1>${var.environment} Environment</h1>
-<p>Password: $APP_PASSWORD</p>
-HTML
+# Enable CGI
+
+sed -i 's/Options Indexes FollowSymLinks/Options Indexes FollowSymLinks ExecCGI/' /etc/httpd/conf/httpd.conf
+sed -i 's/#AddHandler cgi-script .cgi/AddHandler cgi-script .cgi .sh/' /etc/httpd/conf/httpd.conf
+
+# Create CGI directory
+
+mkdir -p /var/www/cgi-bin
+
+# Create login page
+
+cat <<EOF > /var/www/html/index.html
+
+<html>
+<head><title>Login</title></head>
+<body>
+<h1>${var.environment} Environment Login</h1>
+<form action="/cgi-bin/auth.sh" method="get">
+  <input type="password" name="password" placeholder="Enter Password"/>
+  <input type="submit" value="Login"/>
+</form>
+</body>
+</html>
+EOF
+
+# Create backend auth script
+
+cat <<EOF > /var/www/cgi-bin/auth.sh
+#!/bin/bash
+
+echo "Content-type: text/html"
+echo ""
+
+APP_PASSWORD=$(aws ssm get-parameter 
+--name "/${var.environment}/app/password" 
+--with-decryption 
+--query "Parameter.Value" 
+--output text)
+
+if [ "$QUERY_STRING" = "password=$APP_PASSWORD" ]; then
+echo "<h1>Access Granted</h1>"
+else
+echo "<h1>Access Denied</h1>"
+fi
+EOF
+
+# Set permissions
+
+chmod +x /var/www/cgi-bin/auth.sh
+chown -R apache:apache /var/www
+
+# Restart Apache
+
+systemctl restart httpd
 
 EOF
  )
