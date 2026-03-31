@@ -12,7 +12,6 @@ yum install -y httpd aws-cli
 systemctl enable httpd
 systemctl start httpd
 
-#!/bin/bash
 
 APP_PASSWORD=$(aws ssm get-parameter \
   --name "/${ENV}/app/password" \
@@ -24,7 +23,9 @@ cat <<HTML > /var/www/html/index.html
 <h1>${ENV} Environment</h1>
 <p>Password from SSM: $APP_PASSWORD</p>
 HTML
-)
+
+EOF
+ )
   
   iam_instance_profile {
   name = var.instance_profile_name
