@@ -3,7 +3,7 @@ resource "aws_launch_template" "web" {
   image_id      = var.ami_id
   instance_type = var.instance_type
 
- user_data = <<-EOF
+ user_data = base64encode(<<-EOF
 #!/bin/bash
 yum update -y
 
@@ -61,7 +61,7 @@ chown -R apache:apache /var/www
 
 systemctl restart httpd
 EOF
-
+ )
  
   
   iam_instance_profile {
