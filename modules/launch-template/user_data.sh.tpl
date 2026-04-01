@@ -23,7 +23,7 @@ HTML
 
 # Auth script
 
-cat <<SCRIPT > /var/www/cgi-bin/auth.sh
+cat <<SCRIPT > /var/www/cgi-bin/auth.sh << EOF
 #!/bin/bash
 
 echo "Content-type: text/html"
@@ -41,7 +41,7 @@ echo "<h1>Access Granted</h1>"
 else
 echo "<h1>Access Denied</h1>"
 fi
-SCRIPT
+EOF
 
 chmod +x /var/www/cgi-bin/auth.sh
 chown -R apache:apache /var/www
