@@ -6,6 +6,7 @@ resource "aws_launch_template" "web" {
  user_data = base64encode(<<-EOF
 #!/bin/bash
 yum update -y
+yum install -y jq
 
 yum install -y httpd aws-cli
 
@@ -47,11 +48,10 @@ echo ""
 INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed -n 's/^password=//p')
 
 # Fetch password from SSM
-APP_PASSWORD=$(aws ssm get-parameter \
-  --name "/${var.environment}/app/password" \
-  --with-decryption \
-  --query "Parameter.Value" \
-  --output text)
+APP_PASSWORD=$(aws secretsmanager get-secret-value \
+  --secret-id "/${var.environment}/app/password" \
+  --query SecretString \
+  --output text | jq -r .password)
 
 # Trim spaces/newlines (IMPORTANT)
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')

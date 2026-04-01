@@ -45,3 +45,23 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   name = "ec2-ssm-profile-${var.environment}"
   role = aws_iam_role.ec2_ssm_role.name
 }
+
+
+
+resource "aws_iam_role_policy" "secrets_access" {
+  name = "secrets-access-${var.environment}"
+  role = aws_iam_role.ec2_ssm_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = "arn:aws:secretsmanager:ap-south-1:${data.aws_caller_identity.current.account_id}:secret:/${var.environment}/app/password*"
+      }
+    ]
+  })
+}
