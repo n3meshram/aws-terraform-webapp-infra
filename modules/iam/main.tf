@@ -46,7 +46,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_ssm_role.name
 }
 
-data "aws_caller_identity" "current" {}
+
 
 resource "aws_iam_role_policy" "secrets_access" {
   name = "secrets-access-${var.environment}"
