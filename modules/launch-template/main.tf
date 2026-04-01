@@ -44,25 +44,24 @@ cat <<SCRIPT > /var/www/cgi-bin/auth.sh
 echo "Content-type: text/html"
 echo ""
 
-# Extract password from query string
-INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed -n 's/^password=//p')
+INPUT_PASSWORD=$(printf "%s" "$QUERY_STRING" | sed 's/^password=//')
 
-# Fetch password from SSM
-APP_PASSWORD=$(aws secretsmanager get-secret-value \
-  --secret-id "/${var.environment}/app/password" \
-  --query SecretString \
-  --output text | jq -r fromjson.password)
+APP_PASSWORD=$(aws secretsmanager get-secret-value 
+--secret-id "/${var.environment}/app/password" 
+--query SecretString 
+--output text | jq -r '.password')
 
-# Trim spaces/newlines (IMPORTANT)
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
 
 if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
-    echo "<h1>Access Granted</h1>"
+echo "<h1>Access Granted</h1>"
 else
-    echo "<h1>Access Denied</h1>"
+echo "<h1>Access Denied</h1>"
 fi
 SCRIPT
+
+
 
 chmod +x /var/www/cgi-bin/auth.sh
 chown -R apache:apache /var/www
