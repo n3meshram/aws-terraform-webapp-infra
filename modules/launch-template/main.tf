@@ -51,7 +51,7 @@ INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed -n 's/^password=//p')
 APP_PASSWORD=$(aws secretsmanager get-secret-value \
   --secret-id "/${var.environment}/app/password" \
   --query SecretString \
-  --output text | jq -r .password)
+  --output text | jq -r fromjson.password)
 
 # Trim spaces/newlines (IMPORTANT)
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
