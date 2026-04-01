@@ -46,6 +46,8 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_ssm_role.name
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_role_policy" "secrets_access" {
   name = "secrets-access-${var.environment}"
   role = aws_iam_role.ec2_ssm_role.id
@@ -58,7 +60,7 @@ resource "aws_iam_role_policy" "secrets_access" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = "*"
+        Resource = "arn:aws:secretsmanager:ap-south-1:${data.aws_caller_identity.current.account_id}:secret:/${var.environment}/app/password*"
       }
     ]
   })
