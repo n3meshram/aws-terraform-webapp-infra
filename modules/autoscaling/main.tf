@@ -6,6 +6,8 @@ resource "aws_autoscaling_group" "this" {
   max_size            = 3
   min_size            = 1
 
+  update_default_version = true
+
   vpc_zone_identifier = var.private_subnets
 
   launch_template {
@@ -30,5 +32,5 @@ resource "aws_autoscaling_group" "this" {
   lifecycle {
     create_before_destroy = true
   }
-   update_default_version = true
+   
 }
