@@ -31,10 +31,7 @@ echo ""
 
 INPUT_PASSWORD=$(printf "%s" "$QUERY_STRING" | sed 's/^password=//')
 
-APP_PASSWORD=$(aws secretsmanager get-secret-value \
-  --secret-id "/dev/app/password" \
-  --query SecretString \
-  --output text | jq -r '.password')
+APP_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "/dev/app/password" --query SecretString --output text | jq -r '.password')
 
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
