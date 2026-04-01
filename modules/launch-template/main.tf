@@ -2,6 +2,7 @@ resource "aws_launch_template" "web" {
   name_prefix   = "web-${var.environment}-"
   image_id      = var.ami_id
   instance_type = var.instance_type
+  update_default_version = true
 
  user_data = base64encode(templatefile("${path.module}/user_data.sh.tpl", {
   environment = var.environment
