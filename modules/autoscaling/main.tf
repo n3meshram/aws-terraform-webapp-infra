@@ -1,6 +1,6 @@
 resource "aws_autoscaling_group" "this" {
   name = "webapp-asg-${var.environment}"
-  update_default_version = true
+ 
 
   desired_capacity    = 2
   max_size            = 3
@@ -30,4 +30,5 @@ resource "aws_autoscaling_group" "this" {
   lifecycle {
     create_before_destroy = true
   }
+   update_default_version = true
 }
