@@ -1,5 +1,5 @@
 resource "aws_launch_template" "web" {
-  name_prefix   = "web-${var.environment}-"
+  name_prefix   = "web-${var.environment}-lt"
   image_id      = var.ami_id
   instance_type = var.instance_type
   update_default_version = true
