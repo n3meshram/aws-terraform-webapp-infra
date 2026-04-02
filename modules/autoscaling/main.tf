@@ -1,9 +1,11 @@
 resource "aws_autoscaling_group" "this" {
   name = "webapp-asg-${var.environment}"
+ 
 
   desired_capacity    = 2
   max_size            = 3
   min_size            = 1
+
 
   vpc_zone_identifier = var.private_subnets
 
@@ -29,4 +31,5 @@ resource "aws_autoscaling_group" "this" {
   lifecycle {
     create_before_destroy = true
   }
+   
 }
