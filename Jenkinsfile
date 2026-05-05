@@ -58,6 +58,16 @@ stages {
             checkout scm
         }
     }
+    stage('Debug AWS Access') {
+    steps {
+        withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-creds'
+        ]]) {
+            sh 'aws sts get-caller-identity'
+        }
+    }
+}
 
     stage('Terraform Init') {
     steps {
@@ -74,19 +84,29 @@ stages {
 
     stage('Terraform Validate') {
         steps {
-            dir("${env.TF_DIR}") {
-                sh 'terraform validate'
+        dir("${env.TF_DIR}") {
+            withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-creds'
+            ]]) {
+                sh 'terraform init'
             }
         }
     }
+}
 
     stage('Security Scan (tfsec)') {
         steps {
-            dir("${env.TF_DIR}") {
-                sh 'tfsec .'
+        dir("${env.TF_DIR}") {
+            withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-creds'
+            ]]) {
+                sh 'terraform init'
             }
         }
     }
+}
 
     // ✅ PR → ONLY PLAN
     stage('Terraform Plan') {
