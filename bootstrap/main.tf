@@ -1,5 +1,9 @@
+resource "random_id" "rand" {
+  byte_length = 4
+}
+
 resource "aws_s3_bucket" "tf_state" {
-  bucket = "webapp-terraform-state-n3meshram"
+  bucket = "webapp-tf-state-${random_id.rand.hex}"
 
   lifecycle {
     prevent_destroy = true
