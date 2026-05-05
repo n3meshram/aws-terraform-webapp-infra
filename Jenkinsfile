@@ -60,12 +60,17 @@ stages {
     }
 
     stage('Terraform Init') {
-        steps {
-            dir("${env.TF_DIR}") {
+    steps {
+        dir("${env.TF_DIR}") {
+            withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-creds'
+            ]]) {
                 sh 'terraform init'
             }
         }
     }
+}
 
     stage('Terraform Validate') {
         steps {
