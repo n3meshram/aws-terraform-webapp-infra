@@ -76,7 +76,7 @@ stages {
                 $class: 'AmazonWebServicesCredentialsBinding',
                 credentialsId: 'aws-creds'
             ]]) {
-                sh 'terraform init'
+                sh 'terraform init -backend-config=backend.hcl -reconfigure'
             }
         }
     }
