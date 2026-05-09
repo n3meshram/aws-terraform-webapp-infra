@@ -13,8 +13,8 @@ mkdir -p /var/www/cgi-bin
 # Login page
 
 cat <<HTML > /var/www/html/index.html
-
 <h1>${environment} Environment Login</h1>
+
 <form action="/cgi-bin/auth.sh" method="get">
   <input type="password" name="password"/>
   <input type="submit" value="Login"/>
@@ -23,7 +23,7 @@ HTML
 
 # Auth script
 
-cat > /var/www/cgi-bin/auth.sh << 'EOF'
+cat <<'EOF' > /var/www/cgi-bin/auth.sh
 #!/bin/bash
 
 echo "Content-type: text/html"
@@ -42,12 +42,11 @@ INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
 
 if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
-echo "<h1>Access Granted</h1>"
+  echo "<h1>Access Granted</h1>"
 else
-echo "<h1>Access Denied</h1>"
+  echo "<h1>Access Denied</h1>"
 fi
 EOF
-
 
 chmod +x /var/www/cgi-bin/auth.sh
 chown -R apache:apache /var/www
