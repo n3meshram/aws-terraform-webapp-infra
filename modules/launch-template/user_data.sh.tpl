@@ -29,8 +29,8 @@ echo "Content-type: text/html"
 echo ""
 
 urldecode() {
-  : "${*//+/ }"
-  echo -e "${_//%/\\x}"
+  : "$${*//+/ }"
+  echo -e "$${_//%/\\x}"
 }
 
 INPUT_PASSWORD=$(urldecode "$(echo "$QUERY_STRING" | sed 's/^password=//')")
