@@ -23,7 +23,7 @@ HTML
 
 # Auth script
 
-cat <<'EOF' > /var/www/cgi-bin/auth.sh
+cat <<EOF > /var/www/cgi-bin/auth.sh
 #!/bin/bash
 
 echo "Content-type: text/html"
