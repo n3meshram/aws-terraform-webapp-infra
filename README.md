@@ -122,24 +122,115 @@ Handled real-world issues:
 
 ---
 
-## 🔐 Secret Retrieval (Current Implementation)
+## 🔐 AWS Secrets Manager Setup
+
+This project uses AWS Secrets Manager to securely store application passwords for each environment.
+
+---
+
+### 📌 Secret Naming Convention
+
+| Environment | Secret Name           |
+| ----------- | --------------------- |
+| Dev         | `/dev/app/password`   |
+| Stage       | `/stage/app/password` |
+| Prod        | `/prod/app/password`  |
+
+---
+
+## 🚀 Create Secrets
+
+### ✅ Dev Secret
 
 ```bash
-APP_PASSWORD=$(aws secretsmanager get-secret-value \
-  --secret-id "/dev/app/password" \
-  --query SecretString \
-  --output text | jq -r .password)
+aws secretsmanager create-secret \
+  --name "/dev/app/password" \
+  --secret-string '{"password":"Dev@123"}' \
+  --region ap-south-1
 ```
 
 ---
 
-## 🧪 Testing
+### ✅ Stage Secret
 
-### Access Application
-
+```bash
+aws secretsmanager create-secret \
+  --name "/stage/app/password" \
+  --secret-string '{"password":"Stage@123"}' \
+  --region ap-south-1
 ```
+
+---
+
+### ✅ Prod Secret
+
+```bash
+aws secretsmanager create-secret \
+  --name "/prod/app/password" \
+  --secret-string '{"password":"Prod@123"}' \
+  --region ap-south-1
+```
+
+---
+
+## 🔍 Verify Secret
+
+```bash
+aws secretsmanager get-secret-value \
+  --secret-id "/prod/app/password" \
+  --region ap-south-1
+```
+
+---
+
+## ⚙️ IAM Permissions Required
+
+The EC2 IAM role must allow:
+
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "secretsmanager:GetSecretValue"
+  ],
+  "Resource": "*"
+}
+```
+
+> Note: For learning purposes `*` is used. In production, use least-privilege IAM policies.
+
+---
+
+## 🧠 How It Works
+
+During EC2 startup, the application dynamically retrieves the password from AWS Secrets Manager using AWS CLI and `jq`.
+
+Example:
+
+```bash
+APP_PASSWORD=$(aws secretsmanager get-secret-value \
+  --secret-id "/${environment}/app/password" \
+  --query SecretString \
+  --output text | jq -r '.password')
+```
+
+This ensures:
+
+* No hardcoded passwords
+* Environment isolation
+* Centralized secret management
+
+---
+
+## 🧪 Test Login
+
+Access the application:
+
+```text
 http://<ALB-DNS>
 ```
+
+Use the password configured in AWS Secrets Manager for the corresponding environment.
 
 ### Login Behavior
 
