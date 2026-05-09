@@ -6,6 +6,7 @@ variable "azs" {}
 variable "ami_id" {
   description = "Golden AMI for web instances"
   type        = string
+  default     = ""
 }
 
 variable "instance_type" {

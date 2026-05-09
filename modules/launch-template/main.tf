@@ -1,6 +1,16 @@
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
 resource "aws_launch_template" "web" {
   name_prefix   = "web-${var.environment}-lt"
-  image_id      = var.ami_id
+  image_id = var.ami_id != "" ? var.ami_id : data.aws_ami.amazon_linux.id
   instance_type = var.instance_type
   update_default_version = true
 
