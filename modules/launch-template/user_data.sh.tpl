@@ -13,8 +13,8 @@ mkdir -p /var/www/cgi-bin
 # Login page
 
 cat <<HTML > /var/www/html/index.html
-
 <h1>${environment} Environment Login</h1>
+
 <form action="/cgi-bin/auth.sh" method="get">
   <input type="password" name="password"/>
   <input type="submit" value="Login"/>
@@ -23,20 +23,20 @@ HTML
 
 # Auth script
 
+cat <<'EOF' > /var/www/cgi-bin/auth.sh
 #!/bin/bash
+
+ENVIRONMENT="__ENVIRONMENT__"
 
 echo "Content-type: text/html"
 echo ""
 
-urldecode() {
-  : "$${*//+/ }"
-  echo -e "$${_//%/\\x}"
-}
-
-INPUT_PASSWORD=$(urldecode "$(echo "$QUERY_STRING" | sed 's/^password=//')")
+INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed 's/^password=//')
+INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | sed 's/%40/@/g')
 
 APP_PASSWORD=$(aws secretsmanager get-secret-value \
-  --secret-id "/dev/app/password" \
+  --secret-id "/$ENVIRONMENT/app/password" \
+  --region ap-south-1 \
   --query SecretString \
   --output text | jq -r '.password')
 
@@ -48,7 +48,9 @@ if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
 else
   echo "<h1>Access Denied</h1>"
 fi
+EOF
 
+sed -i "s/__ENVIRONMENT__/${environment}/g" /var/www/cgi-bin/auth.sh
 
 chmod +x /var/www/cgi-bin/auth.sh
 chown -R apache:apache /var/www
