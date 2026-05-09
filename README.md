@@ -1,39 +1,89 @@
-# 🚀 AWS Terraform WebApp Infrastructure (Dev → Stage → Prod)
+# 🚀 AWS Terraform WebApp Infrastructure
 
-## 📌 Project Overview
-
-This project demonstrates a **production-style DevOps pipeline** for deploying a web application on AWS using:
-
-* Terraform (Infrastructure as Code)
-* Jenkins (CI/CD Pipeline)
-* AWS (EC2, ALB, ASG, VPC)
-* AWS Secrets Manager (Secure Secret Handling)
+Production-style multi-environment DevOps infrastructure project using Terraform, Jenkins, GitHub, and AWS.
 
 ---
 
-## 🧠 Architecture
+# 📌 Project Goal
 
-```
+This project demonstrates how to:
+
+* Build AWS infrastructure using Terraform
+* Use modular Terraform architecture
+* Configure remote backend using S3 + DynamoDB
+* Implement multi-environment deployments
+* Build CI/CD using Jenkins
+* Use GitHub PR-based workflow
+* Secure applications using AWS Secrets Manager
+* Deploy applications behind ALB + ASG
+* Troubleshoot real-world deployment issues
+
+This repository is designed for learning real DevOps workflows and troubleshooting.
+
+---
+
+# 🧠 Architecture
+
+```text
 GitHub → Jenkins → Terraform → AWS
 
 AWS Components:
-- VPC (Public + Private Subnets)
+- VPC
+- Public Subnets
+- Private Subnets
+- NAT Gateway
+- Internet Gateway
+- Security Groups
 - Application Load Balancer (ALB)
+- Launch Template
 - Auto Scaling Group (ASG)
-- EC2 (Private Subnet, SSM enabled)
-- Secrets Manager (Password storage)
+- EC2 Instances
+- IAM Roles
+- AWS Secrets Manager
+- SSM Session Manager
 ```
 
 ---
 
-## 🔄 CI/CD Flow
+# 📂 Project Structure
 
-```
-Feature Branch → PR → Terraform Plan
-Merge → Terraform Apply
+```text
+aws-terraform-webapp-infra/
+│
+├── Jenkinsfile
+├── README.md
+│
+├── bootstrap/
+│   ├── main.tf
+│   ├── outputs.tf
+│   ├── provider.tf
+│   ├── variables.tf
+│   └── versions.tf
+│
+├── environments/
+│   ├── dev/
+│   ├── stage/
+│   └── prod/
+│
+├── global/
+│   ├── provider.tf
+│   └── versions.tf
+│
+├── modules/
+│   ├── alb/
+│   ├── autoscaling/
+│   ├── iam/
+│   ├── launch-template/
+│   ├── security_group/
+│   └── vpc/
+│
+└── scripts/
+    └── setup-backend.sh
 ```
 
-### Branch Strategy
+---
+
+# 🌍 Branch Strategy
 
 | Branch  | Environment |
 | ------- | ----------- |
@@ -43,269 +93,566 @@ Merge → Terraform Apply
 
 ---
 
-## ⚙️ Key Features Implemented
+# ⚙️ Prerequisites
 
-### ✅ 1. Infrastructure as Code (Terraform)
+Install the following tools:
 
-* Modular structure (VPC, ASG, IAM, Launch Template)
-* Environment-based tfvars (dev/stage/prod)
-
----
-
-### ✅ 2. CI/CD Pipeline (Jenkins)
-
-* PR-based Terraform Plan
-* Controlled Apply on merge
-* Environment detection via branch
+| Tool      | Version  |
+| --------- | -------- |
+| Terraform | >= 1.5   |
+| AWS CLI   | Latest   |
+| Git       | Latest   |
+| Jenkins   | Latest   |
+| VS Code   | Optional |
+| ngrok     | Optional |
 
 ---
 
-### ✅ 3. Secure Secret Handling
+# 🔧 Verify Installation
 
-#### Phase 1: SSM Parameter Store
+## Terraform
 
-* Stored password securely
-* EC2 fetched password at runtime
-
-#### Phase 2: Secrets Manager (Current)
-
-* Secrets stored as JSON
-* Retrieved dynamically using AWS CLI + `jq`
-* No plaintext secrets stored on instance
+```bash
+terraform --version
+```
 
 ---
 
-### ✅ 4. Runtime Authentication (Demo App)
+## AWS CLI
 
-* Apache + CGI-based login system
-* Password fetched dynamically from Secrets Manager
-* No secrets exposed in UI
-
----
-
-### ✅ 5. Auto Scaling & Launch Template
-
-* AMI-based deployment
-* ASG handles instance replacement
-* Launch template updates trigger refresh
+```bash
+aws --version
+```
 
 ---
 
-### ✅ 6. Drift Detection
+## Git
 
-* Terraform detects manual AWS changes
-* Integrated into pipeline using:
-
-  ```
-  terraform plan -detailed-exitcode
-  ```
+```bash
+git --version
+```
 
 ---
 
-### ✅ 7. tfplan Implementation
+## Jenkins
 
-* Plan and Apply separation
-* Ensures consistent deployments
-
----
-
-### ✅ 8. Troubleshooting Experience
-
-Handled real-world issues:
-
-* SSM Agent offline
-* IAM role misconfiguration
-* IMDSv2 token issue
-* NAT / SG issues
-* Terraform destroy dependency failures
-* Launch Template base64 encoding issue
+```bash
+jenkins --version
+```
 
 ---
 
-## 🔐 AWS Secrets Manager Setup
+# ☁️ AWS Requirements
 
-This project uses AWS Secrets Manager to securely store application passwords for each environment.
+Required:
+
+* AWS Account
+* IAM User
+* Programmatic Access
+* AWS CLI Configured
+
+For learning purposes you can temporarily use:
+
+```text
+AdministratorAccess
+```
 
 ---
 
-### 📌 Secret Naming Convention
+# 🔐 Configure AWS CLI
 
-| Environment | Secret Name           |
-| ----------- | --------------------- |
-| Dev         | `/dev/app/password`   |
-| Stage       | `/stage/app/password` |
-| Prod        | `/prod/app/password`  |
+```bash
+aws configure
+```
+
+Provide:
+
+* Access Key
+* Secret Key
+* Region
+* Output Format
+
+Example:
+
+```text
+Region: ap-south-1
+Output: json
+```
 
 ---
 
-## 🚀 Create Secrets
+# 📥 Clone Repository
 
-### ✅ Dev Secret
+```bash
+git clone https://github.com/n3meshram/aws-terraform-webapp-infra.git
+
+cd aws-terraform-webapp-infra
+```
+
+---
+
+# 🚀 STEP 1 — Create Terraform Backend
+
+Terraform remote backend uses:
+
+* S3 Bucket → Terraform State
+* DynamoDB → State Locking
+
+---
+
+## Go to Bootstrap Directory
+
+```bash
+cd bootstrap
+```
+
+---
+
+## Initialize Terraform
+
+```bash
+terraform init
+```
+
+---
+
+## Create Backend Resources
+
+```bash
+terraform apply -auto-approve
+```
+
+This creates:
+
+* S3 bucket
+* DynamoDB table
+
+---
+
+# 🚀 STEP 2 — Update backend.hcl
+
+After bootstrap completes:
+
+Update backend.hcl inside:
+
+```text
+environments/dev/
+environments/stage/
+environments/prod/
+```
+
+---
+
+## Example backend.hcl
+
+```hcl
+bucket         = "your-terraform-state-bucket"
+key            = "dev/terraform.tfstate"
+region         = "ap-south-1"
+dynamodb_table = "your-lock-table"
+encrypt        = true
+```
+
+---
+
+# 🔐 STEP 3 — Create Secrets in AWS
+
+Secrets Manager is used for runtime authentication.
+
+---
+
+## Dev Secret
 
 ```bash
 aws secretsmanager create-secret \
   --name "/dev/app/password" \
-  --secret-string '{"password":"Dev@123"}' \
+  --secret-string '{"password":"dev@123"}' \
   --region ap-south-1
 ```
 
 ---
 
-### ✅ Stage Secret
+## Stage Secret
 
 ```bash
 aws secretsmanager create-secret \
   --name "/stage/app/password" \
-  --secret-string '{"password":"Stage@123"}' \
+  --secret-string '{"password":"stage@123"}' \
   --region ap-south-1
 ```
 
 ---
 
-### ✅ Prod Secret
+## Prod Secret
 
 ```bash
 aws secretsmanager create-secret \
   --name "/prod/app/password" \
-  --secret-string '{"password":"Prod@123"}' \
+  --secret-string '{"password":"prod@123"}' \
   --region ap-south-1
 ```
 
 ---
 
-## 🔍 Verify Secret
+# 🚀 STEP 4 — Deploy Dev Environment
 
 ```bash
-aws secretsmanager get-secret-value \
-  --secret-id "/prod/app/password" \
-  --region ap-south-1
+cd environments/dev
 ```
 
 ---
 
-## ⚙️ IAM Permissions Required
-
-The EC2 IAM role must allow:
-
-```json
-{
-  "Effect": "Allow",
-  "Action": [
-    "secretsmanager:GetSecretValue"
-  ],
-  "Resource": "*"
-}
-```
-
-> Note: For learning purposes `*` is used. In production, use least-privilege IAM policies.
-
----
-
-## 🧠 How It Works
-
-During EC2 startup, the application dynamically retrieves the password from AWS Secrets Manager using AWS CLI and `jq`.
-
-Example:
+## Initialize Backend
 
 ```bash
-APP_PASSWORD=$(aws secretsmanager get-secret-value \
-  --secret-id "/${environment}/app/password" \
-  --query SecretString \
-  --output text | jq -r '.password')
+terraform init \
+  -backend-config=backend.hcl \
+  -reconfigure
 ```
-
-This ensures:
-
-* No hardcoded passwords
-* Environment isolation
-* Centralized secret management
 
 ---
 
-## 🧪 Test Login
+## Deploy Infrastructure
 
-Access the application:
+```bash
+terraform apply -var-file=dev.tfvars
+```
+
+---
+
+# 🚀 STEP 5 — Deploy Stage Environment
+
+```bash
+cd environments/stage
+```
+
+---
+
+## Initialize Backend
+
+```bash
+terraform init \
+  -backend-config=backend.hcl \
+  -reconfigure
+```
+
+---
+
+## Deploy Infrastructure
+
+```bash
+terraform apply -var-file=stage.tfvars
+```
+
+---
+
+# 🚀 STEP 6 — Deploy Production Environment
+
+```bash
+cd environments/prod
+```
+
+---
+
+## Initialize Backend
+
+```bash
+terraform init \
+  -backend-config=backend.hcl \
+  -reconfigure
+```
+
+---
+
+## Deploy Infrastructure
+
+```bash
+terraform apply -var-file=prod.tfvars
+```
+
+---
+
+# 🧪 Application Testing
+
+Get ALB DNS:
+
+```text
+EC2 → Load Balancers → DNS Name
+```
+
+Open:
 
 ```text
 http://<ALB-DNS>
 ```
 
-Use the password configured in AWS Secrets Manager for the corresponding environment.
+---
 
-### Login Behavior
+# 🔑 Test Credentials
 
-| Input Password | Result         |
-| -------------- | -------------- |
-| Correct        | Access Granted |
-| Incorrect      | Access Denied  |
+| Environment | Password  |
+| ----------- | --------- |
+| Dev         | dev@123   |
+| Stage       | stage@123 |
+| Prod        | prod@123  |
 
 ---
 
-## ⚠️ Known Limitations
+# 🔄 CI/CD Workflow
 
-* CGI-based backend (for learning only)
-* Secrets Manager policy is currently wide (`*`)
-* No automated rotation yet
-* No monitoring/alerting implemented
-
----
-
-## 🚀 Future Enhancements
-
-* 🔄 Secrets Manager automatic rotation (Lambda)
-* 📊 CloudWatch monitoring & alerts
-* 🗄️ RDS integration (stateful app)
-* 🔐 IAM least-privilege policies
-* 🐳 Containerization (Docker + ECS/EKS)
-
----
-
-## 🧠 Key Learnings
-
-* Terraform manages **state, not all AWS resources**
-* Drift ≠ new resources, drift = modified resources
-* Launch Templates require **base64 encoded user_data**
-* Secrets should **never be stored on disk**
-* CI/CD must enforce **plan → apply separation**
-
----
-
-## 📂 Project Structure
-
-```
-aws-terraform-webapp-infra/
-│
-├── environments/
-│   ├── dev/
-│   ├── stage/
-│   └── prod/
-│
-├── modules/
-│   ├── vpc/
-│   ├── autoscaling/
-│   ├── launch-template/
-│   └── iam/
-│
-├── Jenkinsfile
-└── README.md
+```text
+Feature Branch
+      ↓
+Pull Request
+      ↓
+Terraform Plan
+      ↓
+Merge Branch
+      ↓
+Terraform Apply
 ```
 
 ---
 
-## 👨‍💻 Author
+# ⚙️ Jenkins Setup
+
+Install Jenkins locally.
+
+---
+
+## Install Required Tools on Jenkins Server
+
+* Terraform
+* AWS CLI
+* Git
+* tfsec
+
+---
+
+# 🔐 Configure Jenkins Credentials
+
+Go to:
+
+```text
+Manage Jenkins → Credentials
+```
+
+Add:
+
+```text
+AWS Credentials
+```
+
+Credential ID Example:
+
+```text
+aws-creds
+```
+
+---
+
+# 🌐 GitHub Webhook Setup
+
+If Jenkins is local machine:
+
+Use ngrok:
+
+```bash
+ngrok http 8080
+```
+
+Copy HTTPS URL.
+
+---
+
+## Configure GitHub Webhook
+
+GitHub Repository:
+
+```text
+Settings → Webhooks
+```
+
+Payload URL:
+
+```text
+https://<ngrok-url>/github-webhook/
+```
+
+Content Type:
+
+```text
+application/json
+```
+
+---
+
+# 🚀 Jenkins Pipeline Features
+
+Implemented:
+
+* Terraform Init
+* Terraform Validate
+* tfsec Scan
+* Terraform Plan
+* Terraform Apply
+* Drift Detection
+* Environment Detection
+* PR-based workflow
+
+---
+
+# 🔍 Drift Detection
+
+Terraform drift detection:
+
+```bash
+terraform plan -detailed-exitcode
+```
+
+---
+
+# 🔐 Security Features
+
+Implemented:
+
+* Private EC2 instances
+* SSM access
+* IAM Roles
+* Security Group isolation
+* Secrets Manager integration
+* No public SSH
+
+---
+
+# 🛠️ Common Issues & Fixes
+
+## Backend Initialization Error
+
+Error:
+
+```text
+Backend initialization required
+```
+
+Fix:
+
+```bash
+terraform init -backend-config=backend.hcl -reconfigure
+```
+
+---
+
+## ALB 502 Bad Gateway
+
+Possible Causes:
+
+* Apache not installed
+* User data failure
+* NAT Gateway issue
+* Target Group unhealthy
+
+Check:
+
+```bash
+sudo cat /var/log/cloud-init-output.log
+```
+
+---
+
+## Secrets Manager Access Denied
+
+Verify:
+
+* IAM role attached
+* Secret exists
+* Region configured
+
+---
+
+## Terraform State Lock Error
+
+Check DynamoDB lock table.
+
+Sometimes stale locks must be removed manually.
+
+---
+
+## Merge Conflict Issues
+
+Recommended:
+
+* Small feature branches
+* Frequent merges
+* Avoid long-lived branches
+
+---
+
+# 🧠 Key Learnings
+
+This project helped understand:
+
+* Terraform state management
+* Remote backend architecture
+* CI/CD pipelines
+* Git branching workflow
+* Runtime debugging
+* Infrastructure drift
+* ALB troubleshooting
+* Secrets handling
+* Auto Scaling behavior
+* Immutable infrastructure concepts
+
+---
+
+# ⚠️ Known Limitations
+
+Current limitations:
+
+* CGI-based application
+* No HTTPS
+* No WAF
+* No monitoring stack
+* No secret rotation
+* Secrets fetched per request
+
+---
+
+# 🚀 Future Enhancements
+
+Planned improvements:
+
+* Docker
+* Amazon ECR
+* ECS/EKS
+* CloudWatch Monitoring
+* Route53
+* ACM SSL
+* Blue/Green Deployments
+* Lambda Secret Rotation
+* GitHub Actions
+
+---
+
+# 👨‍💻 Author
 
 Nitin Meshram
+
 DevOps & Cloud Engineer
 
 ---
 
-## 📌 Final Note
+# 📌 Final Note
 
-This project simulates a **real-world DevOps environment** including:
+This project focuses on learning real-world DevOps deployment and troubleshooting workflows.
 
-* Multi-environment deployment
-* Secure secret management
-* CI/CD automation
-* Troubleshooting real AWS issues
+The goal was not only to deploy infrastructure but also to understand:
 
-👉 This is not just a lab — this is **production mindset training**.
+* runtime failures
+* CI/CD debugging
+* Git conflicts
+* environment consistency
+* infrastructure troubleshooting
+* deployment automation
+
+This repository evolved from a learning lab into a production-style infrastructure simulation project.
