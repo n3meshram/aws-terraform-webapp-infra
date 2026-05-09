@@ -23,25 +23,31 @@ HTML
 
 # Auth script
 
-cat > /var/www/cgi-bin/auth.sh << 'EOF'
 #!/bin/bash
 
 echo "Content-type: text/html"
 echo ""
 
-INPUT_PASSWORD=$(printf "%s" "$QUERY_STRING" | sed 's/^password=//')
+urldecode() {
+  : "${*//+/ }"
+  echo -e "${_//%/\\x}"
+}
 
-APP_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "/${environment}/app/password" --query SecretString --output text | jq -r '.password')
+INPUT_PASSWORD=$(urldecode "$(echo "$QUERY_STRING" | sed 's/^password=//')")
+
+APP_PASSWORD=$(aws secretsmanager get-secret-value \
+  --secret-id "/dev/app/password" \
+  --query SecretString \
+  --output text | jq -r '.password')
 
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
 
 if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
-echo "<h1>Access Granted</h1>"
+  echo "<h1>Access Granted</h1>"
 else
-echo "<h1>Access Denied</h1>"
+  echo "<h1>Access Denied</h1>"
 fi
-EOF
 
 
 chmod +x /var/www/cgi-bin/auth.sh
