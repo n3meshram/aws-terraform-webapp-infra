@@ -13,8 +13,8 @@ mkdir -p /var/www/cgi-bin
 # Login page
 
 cat <<HTML > /var/www/html/index.html
-
 <h1>${environment} Environment Login</h1>
+
 <form action="/cgi-bin/auth.sh" method="get">
   <input type="password" name="password"/>
   <input type="submit" value="Login"/>
@@ -23,26 +23,34 @@ HTML
 
 # Auth script
 
-cat > /var/www/cgi-bin/auth.sh << 'EOF'
+cat <<'EOF' > /var/www/cgi-bin/auth.sh
 #!/bin/bash
+
+ENVIRONMENT="__ENVIRONMENT__"
 
 echo "Content-type: text/html"
 echo ""
 
-INPUT_PASSWORD=$(printf "%s" "$QUERY_STRING" | sed 's/^password=//')
+INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed 's/^password=//')
+INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | sed 's/%40/@/g')
 
-APP_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "/dev/app/password" --query SecretString --output text | jq -r '.password')
+APP_PASSWORD=$(aws secretsmanager get-secret-value \
+  --secret-id "/$ENVIRONMENT/app/password" \
+  --region ap-south-1 \
+  --query SecretString \
+  --output text | jq -r '.password')
 
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
 
 if [ -n "$INPUT_PASSWORD" ] && [ "$INPUT_PASSWORD" = "$APP_PASSWORD" ]; then
-echo "<h1>Access Granted</h1>"
+  echo "<h1>Access Granted</h1>"
 else
-echo "<h1>Access Denied</h1>"
+  echo "<h1>Access Denied</h1>"
 fi
 EOF
 
+sed -i "s/__ENVIRONMENT__/${environment}/g" /var/www/cgi-bin/auth.sh
 
 chmod +x /var/www/cgi-bin/auth.sh
 chown -R apache:apache /var/www
