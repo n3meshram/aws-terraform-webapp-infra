@@ -29,9 +29,14 @@ cat > /var/www/cgi-bin/auth.sh << 'EOF'
 echo "Content-type: text/html"
 echo ""
 
-INPUT_PASSWORD=$(printf "%s" "$QUERY_STRING" | sed 's/^password=//')
+INPUT_PASSWORD=$(echo "$QUERY_STRING" | sed 's/^password=//')
+INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | sed 's/%40/@/g')
 
-APP_PASSWORD=$(aws secretsmanager get-secret-value --secret-id "/${environment}/app/password" --query SecretString --output text | jq -r '.password')
+APP_PASSWORD=$(aws secretsmanager get-secret-value \
+  --secret-id "/${environment}/app/password" \
+  --region ap-south-1 \
+  --query SecretString \
+  --output text | jq -r '.password')
 
 INPUT_PASSWORD=$(echo "$INPUT_PASSWORD" | tr -d '\r\n')
 APP_PASSWORD=$(echo "$APP_PASSWORD" | tr -d '\r\n')
