@@ -1,9 +1,9 @@
 resource "aws_autoscaling_group" "this" {
-  name = "webapp-asg-${var.environment}"
+  name_prefix = "webapp-asg-${var.environment}-"
  
 
-  desired_capacity    = 2
-  max_size            = 3
+  desired_capacity    = 1
+  max_size            = 1
   min_size            = 1
 
 
@@ -28,8 +28,6 @@ resource "aws_autoscaling_group" "this" {
     }
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
+  
    
 }
